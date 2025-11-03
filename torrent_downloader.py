@@ -122,18 +122,13 @@ def download_torrent(source, download_path=TORRENT_DOWNLOAD_PATH,
     pbar = tqdm(total=100, desc="", unit="", bar_format="", ncols=120)
     
     # Track if we're resuming
-    is_resuming = True
     first_iteration = True
+    resume_message_shown = False
     
     try:
         while handle.status().state != lt.torrent_status.seeding:
             s = handle.status()
             progress = s.progress * 100
-
-            # Determine if this is a resume on first iteration
-            if first_iteration:
-                is_resuming = progress > 5  # If progress > 5%, we're resuming
-                first_iteration = False
 
             # Calculate ETA
             eta_str = "N/A"
@@ -164,9 +159,15 @@ def download_torrent(source, download_path=TORRENT_DOWNLOAD_PATH,
             bar = '█' * filled_length + '░' * (bar_length - filled_length)
             
             # Change label based on state
-            if is_resuming and s.download_rate == 0 and s.num_peers == 0:
+            if first_iteration and progress > 5:
+                # Show "Resuming Download" for first few iterations if progress > 5%
                 label = "Resuming Download"
-                is_resuming = False  # Only show once
+                first_iteration = False
+                resume_message_shown = True
+            elif resume_message_shown and not first_iteration:
+                # Show for 2 more seconds after first iteration
+                label = "Resuming Download"
+                resume_message_shown = False
             elif s.download_rate == 0 and s.num_peers == 0:
                 label = "Connecting to Peers"
             else:
