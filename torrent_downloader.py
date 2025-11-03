@@ -121,10 +121,19 @@ def download_torrent(source, download_path=TORRENT_DOWNLOAD_PATH,
     # Initialize progress bar with fully custom format (no postfix to avoid comma)
     pbar = tqdm(total=100, desc="", unit="", bar_format="", ncols=120)
     
+    # Track if we're resuming
+    is_resuming = True
+    first_iteration = True
+    
     try:
         while handle.status().state != lt.torrent_status.seeding:
             s = handle.status()
             progress = s.progress * 100
+
+            # Determine if this is a resume on first iteration
+            if first_iteration:
+                is_resuming = progress > 5  # If progress > 5%, we're resuming
+                first_iteration = False
 
             # Calculate ETA
             eta_str = "N/A"
@@ -154,8 +163,17 @@ def download_torrent(source, download_path=TORRENT_DOWNLOAD_PATH,
             filled_length = int(bar_length * progress / 100)
             bar = '█' * filled_length + '░' * (bar_length - filled_length)
             
+            # Change label based on state
+            if is_resuming and s.download_rate == 0 and s.num_peers == 0:
+                label = "Resuming Download"
+                is_resuming = False  # Only show once
+            elif s.download_rate == 0 and s.num_peers == 0:
+                label = "Connecting to Peers"
+            else:
+                label = "Download Progress"
+            
             stats_str = f"Seeds: {s.num_seeds} | Peers: {s.num_peers - s.num_seeds} | Speed: {speed_str} | ETA: {eta_str} |"
-            progress_line = f"\rDownload Progress: {bar} {progress:.1f}/100%    | {stats_str}"
+            progress_line = f"\r{label}: {bar} {progress:.1f}/100%    | {stats_str}"
             
             # Update tqdm display
             pbar.n = progress
