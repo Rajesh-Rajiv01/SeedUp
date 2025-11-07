@@ -29,6 +29,15 @@ logger = get_logger(__name__)
 # Global variable to store pre-authenticated service
 _DRIVE_SERVICE = None
 
+# Environment check at module level
+try:
+    from google.colab import auth
+    IN_COLAB = True
+    logger.info("Running in Google Colab environment")
+except ImportError:
+    IN_COLAB = False
+    logger.warning("Not running in Google Colab - upload features unavailable")
+
 
 def set_drive_service(service):
     """
@@ -52,15 +61,28 @@ def get_drive_service():
         Google Drive service object
         
     Raises:
-        RuntimeError: If service has not been set
+        RuntimeError: If not in Colab or service has not been set
     """
+    # First check if we're in Colab
+    if not IN_COLAB:
+        error_msg = (
+            "\n" + "="*60 + "\n"
+            "ERROR: Not running in Google Colab environment!\n"
+            "="*60 + "\n"
+            "Google Drive upload is only supported in Google Colab.\n"
+            "Please run this script in Colab to use upload features.\n"
+            + "="*60
+        )
+        raise RuntimeError(error_msg)
+    
+    # Then check if service was initialized
     if _DRIVE_SERVICE is None:
         error_msg = (
             "\n" + "="*60 + "\n"
             "ERROR: Google Drive service not initialized!\n"
             "="*60 + "\n"
             "You must authenticate in a Colab notebook cell BEFORE running this command.\n\n"
-            "Run this in a notebook cell:\n"
+            "Run this in a notebook cell:\n\n"
             "  from google.colab import auth\n"
             "  from googleapiclient.discovery import build\n"
             "  auth.authenticate_user()\n"
@@ -68,7 +90,7 @@ def get_drive_service():
             "  from gdrive_uploader import set_drive_service\n"
             "  set_drive_service(drive_service)\n"
             "  print('✓ Ready to upload!')\n\n"
-            "Then run your command:\n"
+            "Then run your command:\n\n"
             "  !python main.py upload -p '/path/to/files' -f 'FOLDER_ID'\n"
             + "="*60
         )
@@ -89,19 +111,16 @@ class SimpleDriveUploader:
             drive_service: Pre-authenticated Google Drive service (optional)
             
         Raises:
-            RuntimeError: If service not available
+            RuntimeError: If not in Colab or service not available
         """
-        try:
-            if drive_service is not None:
-                self.drive_service = drive_service
-            else:
-                self.drive_service = get_drive_service()
-            
-            self.skip_existing = skip_existing
-            logger.info("Successfully initialized with Google Drive service")
-        except Exception as e:
-            logger.error(f"Initialization failed: {str(e)}")
-            raise
+        if drive_service is not None:
+            self.drive_service = drive_service
+        else:
+            # This will raise RuntimeError with clear message if not set up
+            self.drive_service = get_drive_service()
+        
+        self.skip_existing = skip_existing
+        logger.info("Successfully initialized with Google Drive service")
     
     def file_exists(self, file_name: str, parent_id: str) -> Optional[Dict]:
         """
@@ -414,7 +433,7 @@ def upload_to_google_drive(local_path: str, folder_id: str, **kwargs):
         Dictionary with 'success', 'failed', and 'skipped' lists
         
     Raises:
-        RuntimeError: If service not initialized
+        RuntimeError: If not in Colab or service not initialized
     """
     skip_existing = kwargs.get('skip_existing', True)
     drive_service = kwargs.get('drive_service', None)

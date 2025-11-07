@@ -67,6 +67,7 @@ Run this in a Colab notebook cell first:
   
   from gdrive_uploader import set_drive_service
   set_drive_service(drive_service)
+  print('✓ Ready to upload!')
         """
     )
     
@@ -184,8 +185,18 @@ def handle_download(args):
             logger.info("Upload completed successfully!")
             
         except RuntimeError as e:
-            # This catches the "service not initialized" error
-            print(f"\n{e}")
+            # Catch environment/initialization errors with formatted message
+            error_str = str(e)
+            if error_str.startswith('\n'):
+                # Already formatted, just print it
+                print(error_str)
+            else:
+                # Wrap in formatting
+                print("\n" + "="*60)
+                print("UPLOAD ERROR")
+                print("="*60)
+                print(error_str)
+                print("="*60)
             return 1
         except Exception as e:
             logger.error(f"Upload failed: {str(e)}")
@@ -224,8 +235,18 @@ def handle_upload(args):
         return 0
     
     except RuntimeError as e:
-        # This catches the "service not initialized" error
-        print(f"\n{e}")
+        # Catch environment/initialization errors with formatted message
+        error_str = str(e)
+        if error_str.startswith('\n'):
+            # Already formatted, just print it
+            print(error_str)
+        else:
+            # Wrap in formatting
+            print("\n" + "="*60)
+            print("UPLOAD ERROR")
+            print("="*60)
+            print(error_str)
+            print("="*60)
         return 1
     except Exception as e:
         logger.error(f"Upload failed: {str(e)}")
