@@ -49,10 +49,14 @@ downloads/
 # Torrent files (optional - uncomment if you don't want to track them)
 *.torrent
 
-torrent_downloader_*.py
-*.md
 # OS generated files
 Thumbs.db
 .DS_Store
 .Spotlight-V100
 .Trashes
+
+# Temporary files
+*.tmp
+*.bak
+*.old
+.tmp/
