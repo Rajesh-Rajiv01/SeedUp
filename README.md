@@ -144,8 +144,7 @@ SeedUp/
    - Copy the folder ID from the URL: `https://drive.google.com/drive/folders/FOLDER_ID_HERE`
 
 2. **Authentication:**
-   - In Colab: Automatic authentication via `google.colab.auth`
-   - Local: Manual OAuth2 flow (credentials required)
+   - Automatic authentication via `google.colab.auth`
 
 ### Environment Variables
 Key configuration options in `config.py`:
