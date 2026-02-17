@@ -23,31 +23,20 @@ import logging
 
 # Torrent Downloader Configuration
 TORRENT_SESSION_FILE = "torrent_session.json"
+import os
 
-# Detect if running in Google Colab
 try:
     import google.colab
-    from google.colab import drive
     IN_COLAB = True
 except ImportError:
     IN_COLAB = False
 
-
-# Auto-mount Google Drive if in Colab
-if IN_COLAB:
-    if not os.path.exists("/content/drive"):
-        drive.mount('/content/drive')
-
-
-# Set download path (supports environment override)
 TORRENT_DOWNLOAD_PATH = os.environ.get(
     "SEEDUP_DOWNLOAD_PATH",
     "/content/drive/MyDrive/SeedUpDownloads" if IN_COLAB else os.path.abspath("../SeedUp Downloads")
 )
 
-# Ensure directory exists
 os.makedirs(TORRENT_DOWNLOAD_PATH, exist_ok=True)
-
 
 # Google Drive Uploader Configuration
 CHUNK_SIZE = 100 * 1024 * 1024  # 100MB chunks for large files
